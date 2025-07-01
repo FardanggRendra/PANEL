@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  database:
+    image: mariadb:10.5
+    container_name: pterodactyl_database
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - /srv/pterodactyl/database:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: "panel"
+      MYSQL_USER: "pterodactyl"
+      MYSQL_PASSWORD: "ganti_password_database"
+      MYSQL_ROOT_PASSWORD: "ganti_root_password"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "false"
+
+  cache:
+    image: redis:alpine
+    container_name: pterodactyl_cache
+    restart: always
+
+  panel:
+    image: ghcr.io/pterodactyl/panel:latest
+    container_name: pterodactyl_panel
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - database
+      - cache
+    volumes:
+      - /srv/pterodactyl/panel:/app/code
+      - /srv/pterodactyl/nginx:/etc/nginx/http.d
+    environment:
+      APP_URL: "https://your.panel.domain.com"
+      APP_TIMEZONE: "Asia/Jakarta"
+      APP_SERVICE_AUTHOR: "noreply@your.panel.domain.com"
+      TRUSTED_PROXIES: "*"
+      APP_ENV: "production"
+
+      DB_PORT: "3306"
+      DB_HOST: "database"
+      DB_DATABASE: "panel"
+      DB_USERNAME: "pterodactyl"
+      DB_PASSWORD: "ganti_password_database"
+
+      REDIS_HOST: "cache"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+
+      CACHE_DRIVER: "redis"
+      SESSION_DRIVER: "redis"
+      QUEUE_CONNECTION: "redis"
+
+      MAIL_MAILER: "smtp"
+      MAIL_HOST: "your.smtp.server.com"
+      MAIL_PORT: "587"
+      MAIL_USERNAME: "your_smtp_username"
+      MAIL_PASSWORD: "your_smtp_password"
+      MAIL_ENCRYPTION: "tls"
+      MAIL_FROM_ADDRESS: "noreply@your.panel.domain.com"
+      MAIL_FROM_NAME: "Pterodactyl Panel"
+
+# Uncomment this block if you want to add wings daemon on same machine
+#  wings:
+#    image: ghcr.io/pterodactyl/wings:latest
+#    container_name: pterodactyl_wings
+#    restart: always
+#    ports:
+#      - "8080:8080"
+#      - "2022:2022"
+#    volumes:
+#      - /var/lib/docker/volumes/pterodactyl_wings_data/_data:/etc/pterodactyl/mounts
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - /srv/daemon-data:/var/lib/pterodactyl/volumes
+#    environment:
+#      TZ: "Asia/Jakarta"
+#      OAUTH2_CLIENT_ID: "ganti_wings_client_id"
+#      OAUTH2_CLIENT_SECRET: "ganti_wings_client_secret"
+#      PANEL_URL: "https://your.panel.domain.com"
